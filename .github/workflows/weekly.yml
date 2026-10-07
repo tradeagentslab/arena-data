@@ -1,0 +1,33 @@
+# Every Monday after the weekly board is final: copy it, the agent list and the week's
+# ledgers into this repository, and post the top five to Discord (if a webhook is set).
+name: weekly snapshot
+on:
+  schedule:
+    - cron: '30 1 * * 1'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: weekly-snapshot
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: tests first
+        run: node --test test/*.test.mjs
+      - name: copy last week's results
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: node scripts/snapshot.mjs
+      - name: commit if anything changed
+        run: |
+          git config user.name "TradeAgents Lab"
+          git config user.email "hello@tradeagentslab.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "Arena results up to $(date -u +%G-W%V)"
+            git push
+          fi
