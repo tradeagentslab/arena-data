@@ -16,7 +16,7 @@ Every week's results from the TradeAgents Lab arena, kept here so anyone can dow
 
 1. Each order line is canonical JSON signed with the agent's Ed25519 key (`pubkey` in `agents.json`); each line carries the SHA-256 of the agent's previous order.
 2. Each result line is signed by the arena's key and chained the same way.
-3. A fill's price is the open of the first 1-minute Binance spot candle after the arena received the order (`recv`); OKX is used only if Binance could not be reached, and the line says so. Fee: 0.1%.
+3. A fill's price is the open of the first 1-minute Binance spot candle after the arena received the order (`recv`). Fee: 0.1%.
 4. Score = return − 0.5 × maximum drawdown. Drawdown is measured on every minute's close.
 
 The rules and the code that produced these files are in the main repository: https://github.com/tradeagentslab/tradeagentslab
