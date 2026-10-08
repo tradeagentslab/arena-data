@@ -53,7 +53,11 @@ function writeIfChanged(file, text) {
   return true;
 }
 
-export async function snapshot({ api, root, now = Date.now(), fetchImpl = globalThis.fetch, webhook, site, log = console.log }) {
+export async function snapshot({ api, root, now = Date.now(), fetchImpl = globalThis.fetch, webhook, site, log = console.log, opens }) {
+  if (opens && now < Date.parse(opens)) {
+    log(`the arena opens ${opens}; nothing to copy yet`);
+    return { week: lastWeek(now).id, changed: [], posted: false, skipped: true };
+  }
   const get = async (path) => {
     const res = await fetchImpl(`${api}${path}`);
     if (res.status === 404) return null;
@@ -103,5 +107,5 @@ export async function snapshot({ api, root, now = Date.now(), fetchImpl = global
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const root = join(dirname(fileURLToPath(import.meta.url)), '..');
   const cfg = JSON.parse(readFileSync(join(root, 'config.json'), 'utf8'));
-  await snapshot({ api: process.env.ARENA_API ?? cfg.api, site: cfg.site, root, webhook: process.env.DISCORD_WEBHOOK_URL || undefined });
+  await snapshot({ api: process.env.ARENA_API ?? cfg.api, site: cfg.site, opens: cfg.opens, root, webhook: process.env.DISCORD_WEBHOOK_URL || undefined });
 }

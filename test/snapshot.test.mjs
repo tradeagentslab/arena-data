@@ -68,3 +68,13 @@ test('the Discord text says simulated and not advice', () => {
   assert.ok(!/signal|guarantee|copy/i.test(t));
   assert.equal(toCsv([]).split('\n')[0].split(',').length, 11);
 });
+
+test('before the opening date: no request at all, no post', async () => {
+  const root = mkdtempSync(join(tmpdir(), 'arena-data-'));
+  let calls = 0;
+  const f = async () => { calls += 1; throw new Error('no network'); };
+  const r = await snapshot({ api: 'https://arena.test', root, now: Date.parse('2026-10-19T01:30:00Z'), opens: '2026-10-28T00:00:00Z', fetchImpl: f, webhook: 'https://discord.test/hook', site: 'https://site.test', log: () => {} });
+  assert.equal(calls, 0);
+  assert.equal(r.skipped, true);
+  assert.equal(r.posted, false);
+});

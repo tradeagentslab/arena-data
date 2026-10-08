@@ -13,16 +13,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
+      # Before the arena opens there is nothing to copy: stop here, quietly.
+      - name: has the arena opened?
+        id: open
+        run: |
+          opens=$(jq -r .opens config.json)
+          if [ "$(date -u +%s)" -ge "$(date -u -d "$opens" +%s)" ]; then echo "yes=true" >> "$GITHUB_OUTPUT"; else echo "The arena opens $opens; skipping."; fi
       - uses: actions/setup-node@v5
+        if: steps.open.outputs.yes == 'true'
         with:
           node-version: 24
       - name: tests first
+        if: steps.open.outputs.yes == 'true'
         run: node --test test/*.test.mjs
       - name: copy last week's results
+        if: steps.open.outputs.yes == 'true'
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: node scripts/snapshot.mjs
       - name: commit if anything changed
+        if: steps.open.outputs.yes == 'true'
         run: |
           git config user.name "TradeAgents Lab"
           git config user.email "hello@tradeagentslab.com"
