@@ -11,6 +11,8 @@ concurrency: weekly-snapshot
 jobs:
   snapshot:
     runs-on: ubuntu-latest
+    outputs:
+      open: ${{ steps.open.outputs.yes }}
     steps:
       - uses: actions/checkout@v5
       # Before the arena opens there is nothing to copy: stop here, quietly.
@@ -41,3 +43,34 @@ jobs:
             git commit -m "Arena results up to $(date -u +%G-W%V)"
             git push
           fi
+
+  # Then recompute the newest weekly board from what was just committed: every signature,
+  # every chain link, every fill from Binance's public 1-minute candles. Fails on any
+  # difference. Binance is asked only from here (GitHub's servers), at most 12 requests
+  # a minute, and only for days not already in the cache.
+  recompute:
+    needs: snapshot
+    if: needs.snapshot.outputs.open == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ github.ref_name }}
+      - name: the recompute tool (main repository)
+        uses: actions/checkout@v5
+        with:
+          repository: tradeagentslab/tradeagentslab
+          path: .tal
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+      - name: candles already downloaded
+        uses: actions/cache@v4
+        with:
+          path: .candles
+          key: candles-${{ github.run_id }}
+          restore-keys: candles-
+      - name: recompute the newest weekly board
+        run: node .tal/guard/bin/tal.js arena recompute --data . --cache .candles

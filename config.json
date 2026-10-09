@@ -1,5 +1,6 @@
 {
   "api": "https://tradeagentslab.com/api/arena/v0",
   "site": "https://tradeagentslab.com",
-  "opens": "2026-10-28T00:00:00Z"
+  "opens": "2026-10-28T00:00:00Z",
+  "arenaKey": ""
 }

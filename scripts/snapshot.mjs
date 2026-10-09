@@ -2,6 +2,7 @@
 // Copies last week's arena results into this repository, so they stay public and
 // downloadable even if the website goes away:
 //   agents.json, weekly/<week>.json and .csv, season/<id>.json, ledgers/<agent>/<date>.json
+// (the week's days, plus today's file so far).
 // Optionally posts the weekly top five to a Discord channel webhook.
 //
 //   ARENA_API=https://example.com/api/arena/v0 node scripts/snapshot.mjs
@@ -84,8 +85,11 @@ export async function snapshot({ api, root, now = Date.now(), fetchImpl = global
     if (season) save(`season/${board.season}.json`, `${JSON.stringify(season, null, 2)}\n`);
   }
 
+  // Also today's file so far: the arena writes the week's last minutes just after
+  // midnight, so they sit in Monday's file. Next week's run copies Monday in full.
+  const today = Math.floor(now / DAY) * DAY;
   for (const a of agents?.agents ?? []) {
-    for (let t = wk.from; t < wk.to; t += DAY) {
+    for (let t = wk.from; t <= Math.max(today, wk.to - DAY); t += DAY) {
       const day = new Date(t).toISOString().slice(0, 10);
       const led = await get(`/ledger/${a.agentId}/${day}.json`);
       if (led && (led.orders.length || led.results.length)) save(`ledgers/${a.agentId}/${day}.json`, `${JSON.stringify(led, null, 2)}\n`);

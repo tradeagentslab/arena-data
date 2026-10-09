@@ -39,12 +39,14 @@ test('copies board, csv, agents and ledgers; posts to Discord once', async () =>
     '/agents.json': { agents: [{ agentId: 'tal-grok' }] },
     '/weekly/2026-W44.json': board,
     '/ledger/tal-grok/2026-10-29.json': { agent: 'tal-grok', day: '2026-10-29', orders: [{ recv: 'x', line: '{}' }], results: ['{}'] },
+    '/ledger/tal-grok/2026-11-02.json': { agent: 'tal-grok', day: '2026-11-02', orders: [], results: ['{"late":1}'] },
   });
   const r = await snapshot({ api: 'https://arena.test', root, now: NOW, fetchImpl: f, webhook: 'https://discord.test/hook', site: 'https://site.test', log: () => {} });
   assert.ok(existsSync(join(root, 'weekly/2026-W44.json')));
   assert.match(readFileSync(join(root, 'weekly/2026-W44.csv'), 'utf8'), /"Bot, ""X"""/);
   assert.ok(existsSync(join(root, 'ledgers/tal-grok/2026-10-29.json')));
   assert.ok(!existsSync(join(root, 'ledgers/tal-grok/2026-10-30.json')), 'empty days are not written');
+  assert.ok(existsSync(join(root, 'ledgers/tal-grok/2026-11-02.json')), "Monday's file so far: the week's last minutes are written after midnight");
   assert.equal(r.posted, true);
   assert.match(f.posted[0].content, /1\. Grok \(House\): \+3\.12%/);
   assert.deepEqual(f.posted[0].allowed_mentions, { parse: [] });
