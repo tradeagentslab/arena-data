@@ -35,6 +35,8 @@ The replay always starts at the season's first minute, so the first run download
 
 Every Monday, after the new week is copied here, the same command runs in this repository's GitHub Actions.
 
+A trial season (S0) is not published here. The `S0 check` workflow (daily until 2026-10-28, and by hand) copies the season from the arena API into a temporary folder on GitHub's runner, recomputes the running week's live board up to its `asOf` (`--live`) plus the newest closed weekly board and the season board once they exist, and fails on any difference. Nothing is committed; the run log is public.
+
 The rules and the code that produced these files are in the main repository: https://github.com/tradeagentslab/tradeagentslab
 
 ## License
